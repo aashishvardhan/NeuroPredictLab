@@ -1,11 +1,199 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>NeuroPredictLab</title>
-    <link rel="stylesheet" href="/static/style.css">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Brain Stroke Detection</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    margin: 0; padding: 20px;
+    background-color: #f0f4f8;
+  }
+  h1 {
+    color: #333;
+  }
+  .container {
+    max-width: 700px; margin: 0 auto;
+    background: white; padding: 20px;
+    border-radius: 8px; box-shadow: 0 0 8px #ccc;
+  }
+  .upload-section {
+    margin-bottom: 20px;
+  }
+  input[type="file"] {
+    display: block; margin-bottom: 10px;
+  }
+  #preview {
+    width: 100%; max-height: 350px;
+    object-fit: contain;
+    border-radius: 8px;
+    margin-bottom: 10px;
+  }
+  #result {
+    font-size: 1.2em;
+    color: #004085; background-color: #cce5ff;
+    padding: 10px; border-radius: 6px;
+    display: none;
+  }
+  button {
+    background: #007bff; color: white;
+    border: none; padding: 10px 20px;
+    font-size: 1em; border-radius: 5px;
+    cursor: pointer;
+  }
+  button:disabled {
+    background: #999;
+    cursor: not-allowed;
+  }
+  /* Chatbot styles */
+  #chatbot-container {
+    position: fixed; bottom: 20px; right: 20px;
+    width: 350px; max-height: 400px;
+    background: white; border-radius: 10px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    overflow: hidden; display: flex;
+    flex-direction: column;
+    font-family: Arial, sans-serif;
+  }
+  #chatbot-header {
+    background: #007bff; color: white;
+    padding: 15px;
+    font-weight: bold;
+  }
+  #chatbot-messages {
+    flex-grow: 1;
+    padding: 15px; overflow-y: auto;
+    background: #f7f7f7;
+  }
+  .chat-message {
+    margin-bottom: 12px;
+  }
+  .chat-message.user {
+    text-align: right; color: #007bff;
+  }
+  .chat-message.bot {
+    text-align: left; color: #555;
+  }
+  #chatbot-input {
+    display: flex;
+    border-top: 1px solid #ddd;
+  }
+  #chatbot-input input {
+    flex-grow: 1;
+    border: none;
+    padding: 10px;
+    font-size: 1em;
+  }
+  #chatbot-input button {
+    background: #007bff; color: white;
+    border: none; padding: 10px 15px;
+    cursor: pointer;
+  }
+</style>
 </head>
 <body>
-    <h1>NeuroPredictLab: Brain Stroke Detection</h1>
-    <p>Upload brain scan and interact with our AI chatbot.</p>
+<div class="container">
+  <h1>Brain Stroke Detection</h1>
+  <div class="upload-section">
+    <input type="file" id="imageInput" accept="image/*" />
+    <img id="preview" alt="Image Preview" hidden />
+    <button id="uploadBtn" disabled>Upload & Detect</button>
+  </div>
+  <div id="result"></div>
+</div>
+
+<!-- Chatbot Widget -->
+<div id="chatbot-container">
+  <div id="chatbot-header">Assistant Bot</div>
+  <div id="chatbot-messages"></div>
+  <div id="chatbot-input">
+    <input type="text" id="chatInput" placeholder="Ask me anything..." />
+    <button id="chatSendBtn">Send</button>
+  </div>
+</div>
+
+<script>
+  const imageInput = document.getElementById('imageInput');
+  const preview = document.getElementById('preview');
+  const uploadBtn = document.getElementById('uploadBtn');
+  const resultDiv = document.getElementById('result');
+
+  imageInput.addEventListener('change', () => {
+    const file = imageInput.files[0];
+    if (file) {
+      preview.src = URL.createObjectURL(file);
+      preview.hidden = false;
+      uploadBtn.disabled = false;
+      resultDiv.style.display = 'none';
+    }
+  });
+
+  uploadBtn.addEventListener('click', () => {
+    if (!imageInput.files[0]) return;
+
+    const formData = new FormData();
+    formData.append('image', imageInput.files[0]);
+
+    uploadBtn.disabled = true;
+    resultDiv.style.display = 'none';
+    resultDiv.textContent = 'Detecting...';
+
+    fetch('/upload', { method: 'POST', body: formData })
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) {
+          resultDiv.textContent = 'Error: ' + data.error;
+          resultDiv.style.color = 'red';
+        } else {
+          resultDiv.style.color = '#004085';
+          resultDiv.textContent =
+            `Result for ${data.filename}: ${data.prediction}`;
+        }
+        resultDiv.style.display = 'block';
+        uploadBtn.disabled = false;
+      })
+      .catch(() => {
+        resultDiv.textContent = 'Upload failed.';
+        resultDiv.style.color = 'red';
+        resultDiv.style.display = 'block';
+        uploadBtn.disabled = false;
+      });
+  });
+
+  // Simple Chatbot logic (for demo)
+  const chatMessages = document.getElementById('chatbot-messages');
+  const chatInput = document.getElementById('chatInput');
+  const chatSendBtn = document.getElementById('chatSendBtn');
+
+  function appendMessage(sender, text) {
+    const div = document.createElement('div');
+    div.className = 'chat-message ' + sender;
+    div.textContent = text;
+    chatMessages.appendChild(div);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+
+  chatSendBtn.onclick = () => {
+    const message = chatInput.value.trim();
+    if (!message) return;
+    appendMessage('user', message);
+    chatInput.value = '';
+
+    // Simple demo responses
+    setTimeout(() => {
+      let reply = 'Sorry, I am not sure how to answer that.';
+      if (message.toLowerCase().includes('hello')) reply = 'Hello! How can I assist?';
+      if (message.toLowerCase().includes('upload')) reply = 'Please use the upload section above to submit your brain scan image.';
+      if (message.toLowerCase().includes('model')) reply = 'Our model analyzes brain scans to detect potential strokes.';
+      appendMessage('bot', reply);
+    }, 800);
+  };
+
+  chatInput.addEventListener('keypress', e => {
+    if (e.key === 'Enter') chatSendBtn.click();
+  });
+</script>
+
 </body>
 </html>
