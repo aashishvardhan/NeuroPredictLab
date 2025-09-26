@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>NeuroPredictLab - Brain Stroke Detection</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <img src="../assets/logo.png" alt="NeuroPredictLab Logo" width="80">
+        <h1>NeuroPredictLab</h1>
+        <p>Your AI-powered Brain Stroke Detection & Classification</p>
+    </header>
+
+    <main>
+        <section id="upload-section">
+            <h2>Upload MRI/CT Image</h2>
+            <input type="file" id="imageUpload" accept="image/*">
+            <button onclick="predictStroke()">Predict Stroke</button>
+            <div id="predictionResult"></div>
+        </section>
+
+        <section id="chatbot-section">
+            <h2>AI Chatbot</h2>
+            <div id="chat-window"></div>
+            <input type="text" id="chat-input" placeholder="Ask me anything about brain stroke..."/>
+            <button onclick="sendMessage()">Send</button>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 NeuroPredictLab</p>
+    </footer>
+    <script src="app.js"></script>
+</body>
+</html>
